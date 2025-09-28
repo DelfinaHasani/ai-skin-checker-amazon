@@ -1,29 +1,20 @@
-# medgemma_infer.py
-import torch
-from transformers import pipeline
+from __future__ import annotations
+from PIL import Image
 
-# <<< set your local image path here >>>
-IMAGE_PATH = r"C:\Users\GOLD mobile\Desktop\skin-check\lesion.jpg"
+def analyze_symptoms(img: Image.Image, symptom_text: str) -> str:
+    """
+    Simple stub: does not use large models.
+    Returns a textual explanation based on the user-provided symptoms.
+    """
+    symptom_text = (symptom_text or "").strip()
+    if not symptom_text:
+        return ""
+    base = (
+        "Based on the described symptoms and the visual input, "
+        "this appears consistent with a mild, non-urgent presentation. "
+        "Monitor changes (size, color, borders, pain or itch). "
+        "If symptoms persist, worsen, or systemic signs occur (fever, spreading), "
+        "seek a clinician’s evaluation. "
+    )
+    return f"{base}\nUser-noted symptoms: {symptom_text}"
 
-# Choose device/dtype
-use_cuda = torch.cuda.is_available()
-device = 0 if use_cuda else -1  # pipeline uses -1 for CPU
-dtype = torch.bfloat16 if use_cuda else torch.float32
-
-pipe = pipeline(
-    task="image-text-to-text",
-    model="google/medgemma-4b-it",   # instruction-tuned variant (recommended)
-    torch_dtype=dtype,
-    device=device
-)
-
-messages = [
-    {"role": "system", "content": [{"type": "text", "text": "You are a careful dermatologist assistant."}]},
-    {"role": "user", "content": [
-        {"type": "text", "text": "Describe key features and provide non-diagnostic guidance."},
-        {"type": "image", "image": IMAGE_PATH}
-    ]}
-]
-
-out = pipe(text=messages, max_new_tokens=200)
-print(out[0]["generated_text"][-1]["content"])
