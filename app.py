@@ -3,8 +3,8 @@ from typing import Optional
 import logging
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
-from derm_embed import predict_skin_condition
-from medgemma_infer import analyze_symptoms
+from derm_embed import predict_skin_condition, derm_embedding
+from medgemma_infer import analyze_symptoms  
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.logger.setLevel(logging.INFO)
@@ -23,7 +23,6 @@ def detect():
         has_file = file is not None and file.filename != ""
         has_text = len(symptom_text) > 0
 
-     
         if not has_file and not has_text:
             return jsonify({"message": "Provide an image or write symptoms."}), 400
 
@@ -35,11 +34,13 @@ def detect():
                 app.logger.exception("Could not read image")
                 return jsonify({"message": f"Could not read image: {e}"}), 400
 
-        # (1) Only picture
+        # (1) Only photo
         # (2) Only text
         # (3) Both
         label = None
         score = None
+        embedding = None
+
         if img is not None:
             try:
                 label, score = predict_skin_condition(img)
@@ -48,12 +49,21 @@ def detect():
                 app.logger.exception("Image model error")
                 return jsonify({"message": f"Image model error: {e}"}), 500
 
+         
+        
+            try:
+                embedding = derm_embedding(img).astype(float).tolist()
+            except Exception as e:
+                app.logger.warning("Derm embedding failed: %s", e)
+                embedding = None
+
         explanation = analyze_symptoms(img, symptom_text) if has_text else None
 
         return jsonify({
-            "disease": label,
-            "accuracy": score,
-            "symptom_analysis": explanation
+            "disease": label,          # None kur s’ka foto
+            "accuracy": score,         # None kur s’ka foto
+            "embedding": embedding,    # list[float] ose None (mund të jetë e gjatë)
+            "symptom_analysis": explanation  # None kur s’ka tekst
         }), 200
 
     except Exception as e:
@@ -62,4 +72,3 @@ def detect():
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5050, debug=True)
-
