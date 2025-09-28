@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skin Check · Advanced UI</title>
+  <style>
+    :root{
+      --bg:#0b0c10; --panel:#111218; --muted:#6a7180; --text:#e8ecf1; --brand:#6aa6ff; --accent:#4ade80; --danger:#ff6b6b; --border:#1f2430;
+      --radius:14px; --radius-sm:10px; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, sans-serif; background:linear-gradient(180deg, #0b0c10, #0e1117); color:var(--text)}
+    .container{max-width:980px; margin-inline:auto; padding:28px 18px 80px}
+
+    header{display:flex; align-items:center; gap:14px; margin-bottom:22px}
+    header .logo{width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg, var(--brand), #8a7dff); display:grid; place-items:center; box-shadow:var(--shadow)}
+    header .logo span{font-weight:800}
+    header h1{margin:0; font-size:1.4rem; letter-spacing:.2px}
+    header .sub{color:var(--muted); font-size:.95rem}
+
+    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:18px}
+    @media (max-width: 880px){ .grid{grid-template-columns:1fr;}}
+
+    .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
+    .card h2{margin:0 0 8px; font-size:1.05rem}
+    .muted{color:var(--muted)}
+
+    .uploader{border:1.5px dashed #2b3240; border-radius:var(--radius); padding:18px; display:grid; place-items:center; text-align:center; transition:.2s border-color, .2s background}
+    .uploader.drag{border-color:var(--brand); background:#0d1220}
+    .uploader input{display:none}
+    .uploader .cta{display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, var(--brand), #8a7dff); border:none; color:white; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600}
+    .uploader .hint{font-size:.9rem; color:var(--muted); margin-top:8px}
+
+    .preview{margin-top:14px; display:flex; align-items:flex-start; gap:14px}
+    .preview img{width:160px; height:160px; object-fit:cover; border-radius:12px; border:1px solid var(--border)}
+    .preview .meta{flex:1; min-width:0}
+    .kv{display:flex; gap:10px; flex-wrap:wrap; font-size:.9rem}
+    .kv .tag{background:#141823; border:1px solid var(--border); padding:6px 8px; border-radius:10px; color:#cfd6e4}
+
+    textarea{width:100%; min-height:120px; resize:vertical; background:#0d1016; color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px}
+
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{appearance:none; border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer}
+    .btn.primary{background:linear-gradient(135deg, var(--brand), #8a7dff); color:white}
+    .btn.secondary{background:#141823; color:#cfd6e4; border:1px solid var(--border)}
+    .btn.ghost{background:transparent; border:1px dashed #2b3240; color:#cfd6e4}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
+
+    .result{display:grid; gap:12px}
+    .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:.9rem; border:1px solid var(--border); background:#10131a}
+    .confidence{height:12px; background:#121620; border:1px solid var(--border); border-radius:999px; overflow:hidden}
+    .confidence .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #b2f59c)}
+    .json{background:#0c0f15; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#c7d2fe; font-size:.9rem; overflow:auto; max-height:260px}
+
+    .toast{position:fixed; right:16px; bottom:16px; background:#10131a; border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(10px); transition:.25s}
+    .toast.show{opacity:1; transform:translateY(0)}
+
+    .spinner{width:22px; height:22px; border-radius:50%; border:3px solid #263044; border-top-color:#7aa2ff; animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.45); z-index:50}
+    .overlay.show{display:grid}
+    .dialog{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo"><span>🧪</span></div>
+      <div>
+        <h1>Skin Check</h1>
+        <div class="sub">Upload an image, optionally describe symptoms, and get a quick AI demo response.</div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Input -->
+      <section class="card">
+        <h2>1) Upload</h2>
+        <div id="drop" class="uploader" tabindex="0">
+          <div>
+            <p style="margin:6px 0 10px">Drag & drop an image here</p>
+            <button class="cta" id="pickBtn" type="button">Choose File</button>
+            <div class="hint">PNG / JPG up to ~10 MB</div>
+          </div>
+          <input id="fileInput" name="file" type="file" accept="image/*" />
+        </div>
+        <div id="preview" class="preview" style="display:none">
+          <img id="prevImg" alt="preview"/>
+          <div class="meta">
+            <div class="kv">
+              <span class="tag" id="kvName">—</span>
+              <span class="tag" id="kvSize">—</span>
+              <span class="tag" id="kvDim">—</span>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn secondary" id="replaceBtn" type="button">Replace</button>
+              <button class="btn ghost" id="clearBtn" type="button">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <h2 style="margin-top:18px">2) Symptoms (optional)</h2>
+        <textarea id="symptom" name="symptom" placeholder="e.g., redness, itchiness, sensitivity..."></textarea>
+
+        <div class="row" style="margin-top:14px">
+          <button id="analyzeBtn" class="btn primary" disabled>Analyze</button>
+          <button id="tryBtn" class="btn secondary" type="button">Try sample</button>
+        </div>
+      </section>
+
+      <!-- Right: Output -->
+      <section class="card">
+        <h2>Result</h2>
+        <div id="resultEmpty" class="muted">No analysis yet. Results will appear here.</div>
+        <div id="result" class="result" style="display:none">
+          <div class="row">
+            <div class="pill" id="diseasePill">Diagnosis: <strong id="disease">—</strong></div>
+            <div class="pill">Confidence: <strong id="confText">—</strong></div>
+          </div>
+          <div class="confidence" title="confidence">
+            <div id="confBar" class="bar"></div>
+          </div>
+          <div id="explanation" style="display:none"></div>
+          <details>
+            <summary class="muted">Raw JSON</summary>
+            <pre id="json" class="json">{}</pre>
+          </details>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="overlay" class="overlay">
+    <div class="dialog">
+      <div class="spinner"></div>
+      <div>Processing…</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+  const $ = (id)=>document.getElementById(id);
+  const drop = $('drop');
+  const fileInput = $('fileInput');
+  const pickBtn = $('pickBtn');
+  const analyzeBtn = $('analyzeBtn');
+  const tryBtn = $('tryBtn');
+  const symptom = $('symptom');
+  const overlay = $('overlay');
+
+  const result = $('result');
+  const resultEmpty = $('resultEmpty');
+  const disease = $('disease');
+  const diseasePill = $('diseasePill');
+  const confText = $('confText');
+  const confBar = $('confBar');
+  const explanation = $('explanation');
+  const jsonBox = $('json');
+
+  const previewWrap = $('preview');
+  const prevImg = $('prevImg');
+  const kvName = $('kvName');
+  const kvSize = $('kvSize');
+  const kvDim = $('kvDim');
+  const replaceBtn = $('replaceBtn');
+  const clearBtn = $('clearBtn');
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  function bytes(n){
+    const units=['B','KB','MB','GB'];
+    let u=0; let v=n;
+    while(v>1024 && u<units.length-1){ v/=1024; u++; }
+    return v.toFixed( (u===0)?0:1 )+" "+units[u];
+  }
+
+  function enableAnalyze(on){ analyzeBtn.disabled = !on; }
+
+  function showPreview(file){
+    const url = URL.createObjectURL(file);
+    prevImg.onload = ()=>{ URL.revokeObjectURL(url); kvDim.textContent = prevImg.naturalWidth+"×"+prevImg.naturalHeight; };
+    prevImg.src = url;
+    kvName.textContent = file.name;
+    kvSize.textContent = bytes(file.size);
+    previewWrap.style.display='flex';
+    enableAnalyze(true);
+  }
+
+  function clearFile(){
+    fileInput.value = '';
+    previewWrap.style.display='none';
+    enableAnalyze(false);
+  }
+
+  pickBtn.addEventListener('click', ()=> fileInput.click());
+  replaceBtn.addEventListener('click', ()=> fileInput.click());
+  clearBtn.addEventListener('click', clearFile);
+
+  fileInput.addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    if(!/^image\//.test(f.type)) return toast('Please select an image file.');
+    if(f.size > 10*1024*1024) return toast('File too large (>10MB).');
+    showPreview(f);
+  });
+
+  // Drag & drop
+  ['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt, e=>{e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');}));
+  ;['dragleave','drop'].forEach(evt=>drop.addEventListener(evt, e=>{e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');}));
+  drop.addEventListener('drop', (e)=>{
+    const f = e.dataTransfer.files[0];
+    if(!f) return;
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change'));
+  });
+
+  tryBtn.addEventListener('click', ()=>{
+    symptom.value = 'redness and mild itch for 2 days';
+    toast('Sample symptom inserted. Add a photo to analyze.');
+  });
+
+  async function analyze(){
+    const f = fileInput.files[0];
+    if(!f){ toast('Please select an image.'); return; }
+
+    const fd = new FormData();
+    fd.append('file', f);
+    fd.append('symptom', symptom.value||'');
+
+    overlay.classList.add('show');
+    try{
+      const res = await fetch('/detect', {method:'POST', body: fd});
+      const text = await res.text();
+      if(!res.ok){
+        let msg = text;
+        try{ msg = JSON.parse(text).message || msg; }catch{}
+        throw new Error(msg||('HTTP '+res.status));
+      }
+      const data = JSON.parse(text);
+      renderResult(data);
+    }catch(err){
+      toast('Error: '+err.message);
+    }finally{
+      overlay.classList.remove('show');
+    }
+  }
+
+  function renderResult(data){
+    resultEmpty.style.display='none';
+    result.style.display='grid';
+
+    const label = data.disease || '—';
+    const acc = (typeof data.accuracy === 'number') ? (data.accuracy<=1? (data.accuracy*100): data.accuracy) : 0;
+
+    disease.textContent = label;
+    confText.textContent = acc.toFixed(2)+'%';
+    confBar.style.width = Math.max(0, Math.min(100, acc)).toFixed(2)+'%';
+
+    if(data.symptom_analysis){
+      explanation.style.display='block';
+      explanation.innerHTML = '<h3>Explanation</h3><p class="muted">'+escapeHtml(data.symptom_analysis).replace(/\n/g,'<br>')+'</p>';
+    }else{
+      explanation.style.display='none';
+      explanation.innerHTML='';
+    }
+
+    jsonBox.textContent = JSON.stringify(data, null, 2);
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+  }
+
+  analyzeBtn.addEventListener('click', (e)=>{ e.preventDefault(); analyze(); });
+  </script>
+</body>
+</html>
