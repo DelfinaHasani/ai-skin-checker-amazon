@@ -1,9 +1,10 @@
 from __future__ import annotations
+from typing import Optional
 import logging
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
 from derm_embed import predict_skin_condition
-from medgemma_infer import analyze_symptoms  # stub i lehtë (nuk shkarkon modele)
+from medgemma_infer import analyze_symptoms
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.logger.setLevel(logging.INFO)
@@ -16,29 +17,38 @@ def index():
 def detect():
     try:
         app.logger.info("HIT /detect")
-        app.logger.info("FILES: %s", list(request.files.keys()))
-        app.logger.info("FORM: %s", dict(request.form))
-
         file = request.files.get("file")
-        if file is None or file.filename == "":
-            return jsonify({"message": "No image file provided (form field 'file')."}), 400
-
         symptom_text = (request.form.get("symptom") or "").strip()
 
-        try:
-            img = Image.open(file.stream).convert("RGB")
-        except Exception as e:
-            app.logger.exception("Could not read image")
-            return jsonify({"message": f"Could not read image: {e}"}), 400
+        has_file = file is not None and file.filename != ""
+        has_text = len(symptom_text) > 0
 
-        try:
-            label, score = predict_skin_condition(img)
-            score = float(score)
-        except Exception as e:
-            app.logger.exception("Image model error")
-            return jsonify({"message": f"Image model error: {e}"}), 500
+     
+        if not has_file and not has_text:
+            return jsonify({"message": "Provide an image or write symptoms."}), 400
 
-        explanation = analyze_symptoms(img, symptom_text) if symptom_text else None
+        img: Optional[Image.Image] = None
+        if has_file:
+            try:
+                img = Image.open(file.stream).convert("RGB")
+            except Exception as e:
+                app.logger.exception("Could not read image")
+                return jsonify({"message": f"Could not read image: {e}"}), 400
+
+        # (1) Only picture
+        # (2) Only text
+        # (3) Both
+        label = None
+        score = None
+        if img is not None:
+            try:
+                label, score = predict_skin_condition(img)
+                score = float(score)
+            except Exception as e:
+                app.logger.exception("Image model error")
+                return jsonify({"message": f"Image model error: {e}"}), 500
+
+        explanation = analyze_symptoms(img, symptom_text) if has_text else None
 
         return jsonify({
             "disease": label,
@@ -52,3 +62,4 @@ def detect():
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5050, debug=True)
+
