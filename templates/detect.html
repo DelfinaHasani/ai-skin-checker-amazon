@@ -183,7 +183,12 @@
     return v.toFixed( (u===0)?0:1 )+" "+units[u];
   }
 
-  function enableAnalyze(on){ analyzeBtn.disabled = !on; }
+
+  function updateAnalyzeState(){
+    const hasFile = !!fileInput.files[0];
+    const hasTxt  = (symptom.value || "").trim().length > 0;
+    analyzeBtn.disabled = !(hasFile || hasTxt);
+  }
 
   function showPreview(file){
     const url = URL.createObjectURL(file);
@@ -192,13 +197,13 @@
     kvName.textContent = file.name;
     kvSize.textContent = bytes(file.size);
     previewWrap.style.display='flex';
-    enableAnalyze(true);
+    updateAnalyzeState();
   }
 
   function clearFile(){
     fileInput.value = '';
     previewWrap.style.display='none';
-    enableAnalyze(false);
+    updateAnalyzeState();
   }
 
   pickBtn.addEventListener('click', ()=> fileInput.click());
@@ -207,9 +212,9 @@
 
   fileInput.addEventListener('change', (e)=>{
     const f = e.target.files[0];
-    if(!f) return;
-    if(!/^image\//.test(f.type)) return toast('Please select an image file.');
-    if(f.size > 10*1024*1024) return toast('File too large (>10MB).');
+    if(!f) { updateAnalyzeState(); return; }
+    if(!/^image\//.test(f.type)) { toast('Please select an image file.'); fileInput.value=''; updateAnalyzeState(); return; }
+    if(f.size > 10*1024*1024) { toast('File too large (>10MB).'); fileInput.value=''; updateAnalyzeState(); return; }
     showPreview(f);
   });
 
@@ -225,16 +230,22 @@
 
   tryBtn.addEventListener('click', ()=>{
     symptom.value = 'redness and mild itch for 2 days';
-    toast('Sample symptom inserted. Add a photo to analyze.');
+    updateAnalyzeState();
+    toast('Sample symptom inserted. You can analyze with or without a photo.');
   });
 
   async function analyze(){
     const f = fileInput.files[0];
-    if(!f){ toast('Please select an image.'); return; }
+    const hasTxt = (symptom.value || "").trim().length > 0;
+
+    if(!f && !hasTxt){
+      toast('Please add a photo or write symptoms.');
+      return;
+    }
 
     const fd = new FormData();
-    fd.append('file', f);
-    fd.append('symptom', symptom.value||'');
+    if(f) fd.append('file', f);
+    fd.append('symptom', symptom.value||''); 
 
     overlay.classList.add('show');
     try{
@@ -258,12 +269,18 @@
     resultEmpty.style.display='none';
     result.style.display='grid';
 
-    const label = data.disease || '—';
-    const acc = (typeof data.accuracy === 'number') ? (data.accuracy<=1? (data.accuracy*100): data.accuracy) : 0;
+    const label = data.disease ?? '—';
+    const accVal = (typeof data.accuracy === 'number') ? (data.accuracy<=1? (data.accuracy*100): data.accuracy) : null;
 
     disease.textContent = label;
-    confText.textContent = acc.toFixed(2)+'%';
-    confBar.style.width = Math.max(0, Math.min(100, acc)).toFixed(2)+'%';
+    if (accVal === null) {
+      confText.textContent = '—';
+      confBar.style.width = '0%';
+    } else {
+      const pct = Math.max(0, Math.min(100, accVal));
+      confText.textContent = pct.toFixed(2)+'%';
+      confBar.style.width = pct.toFixed(2)+'%';
+    }
 
     if(data.symptom_analysis){
       explanation.style.display='block';
@@ -281,6 +298,10 @@
   }
 
   analyzeBtn.addEventListener('click', (e)=>{ e.preventDefault(); analyze(); });
+
+ 
+  updateAnalyzeState();
+  symptom.addEventListener('input', updateAnalyzeState);
   </script>
 </body>
 </html>
