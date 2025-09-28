@@ -117,10 +117,11 @@
         <div id="resultEmpty" class="muted">No analysis yet. Results will appear here.</div>
         <div id="result" class="result" style="display:none">
           <div class="row">
-            <div class="pill" id="diseasePill">Diagnosis: <strong id="disease">—</strong></div>
-            <div class="pill">Confidence: <strong id="confText">—</strong></div>
+            <div class="pill" id="modePill" title="Input mode">Mode: <strong id="mode">—</strong></div>
+            <div class="pill" id="diagPill">Diagnosis: <strong id="disease">—</strong></div>
+            <div class="pill" id="confPill">Confidence: <strong id="confText">—</strong></div>
           </div>
-          <div class="confidence" title="confidence">
+          <div class="confidence" id="confWrap" title="confidence" style="display:none">
             <div id="confBar" class="bar"></div>
           </div>
           <div id="explanation" style="display:none"></div>
@@ -128,6 +129,10 @@
             <summary class="muted">Raw JSON</summary>
             <pre id="json" class="json">{}</pre>
           </details>
+          <div class="row">
+            <button class="btn ghost" id="copyJson" type="button">Copy JSON</button>
+            <button class="btn secondary" id="resetBtn" type="button">Reset</button>
+          </div>
         </div>
       </section>
     </div>
@@ -154,12 +159,18 @@
 
   const result = $('result');
   const resultEmpty = $('resultEmpty');
+  const modePill = $('modePill');
+  const modeText = $('mode');
   const disease = $('disease');
-  const diseasePill = $('diseasePill');
+  const diagPill = $('diagPill');
+  const confPill = $('confPill');
   const confText = $('confText');
+  const confWrap = $('confWrap');
   const confBar = $('confBar');
   const explanation = $('explanation');
   const jsonBox = $('json');
+  const copyJson = $('copyJson');
+  const resetBtn = $('resetBtn');
 
   const previewWrap = $('preview');
   const prevImg = $('prevImg');
@@ -183,7 +194,7 @@
     return v.toFixed( (u===0)?0:1 )+" "+units[u];
   }
 
-
+  
   function updateAnalyzeState(){
     const hasFile = !!fileInput.files[0];
     const hasTxt  = (symptom.value || "").trim().length > 0;
@@ -206,9 +217,28 @@
     updateAnalyzeState();
   }
 
+  function resetAll(){
+    clearFile();
+    symptom.value = '';
+    result.style.display='none';
+    resultEmpty.style.display='block';
+    diagPill.style.display='';
+    confPill.style.display='';
+    confWrap.style.display='none';
+    disease.textContent = '—';
+    confText.textContent = '—';
+    confBar.style.width = '0%';
+    explanation.style.display='none';
+    explanation.innerHTML='';
+    jsonBox.textContent='{}';
+    modeText.textContent='—';
+    updateAnalyzeState();
+  }
+
   pickBtn.addEventListener('click', ()=> fileInput.click());
   replaceBtn.addEventListener('click', ()=> fileInput.click());
   clearBtn.addEventListener('click', clearFile);
+  resetBtn.addEventListener('click', resetAll);
 
   fileInput.addEventListener('change', (e)=>{
     const f = e.target.files[0];
@@ -245,7 +275,7 @@
 
     const fd = new FormData();
     if(f) fd.append('file', f);
-    fd.append('symptom', symptom.value||''); 
+    fd.append('symptom', symptom.value||'');
 
     overlay.classList.add('show');
     try{
@@ -257,7 +287,7 @@
         throw new Error(msg||('HTTP '+res.status));
       }
       const data = JSON.parse(text);
-      renderResult(data);
+      renderResult(data, !!f, hasTxt);
     }catch(err){
       toast('Error: '+err.message);
     }finally{
@@ -265,23 +295,37 @@
     }
   }
 
-  function renderResult(data){
+  function renderResult(data, hadFile, hadText){
     resultEmpty.style.display='none';
     result.style.display='grid';
 
-    const label = data.disease ?? '—';
-    const accVal = (typeof data.accuracy === 'number') ? (data.accuracy<=1? (data.accuracy*100): data.accuracy) : null;
+    
+    modeText.textContent = hadFile && hadText ? 'Image + Text' : hadFile ? 'Image only' : 'Text only';
 
-    disease.textContent = label;
-    if (accVal === null) {
-      confText.textContent = '—';
-      confBar.style.width = '0%';
+    
+    const hasDisease = data.disease != null && data.disease !== '';
+    const hasAccNum = typeof data.accuracy === 'number';
+
+    if(!hasDisease){
+      diagPill.style.display = 'none';
     } else {
+      diagPill.style.display = '';
+      disease.textContent = data.disease;
+    }
+
+    if(!hasAccNum){
+      confPill.style.display = 'none';
+      confWrap.style.display = 'none';
+    } else {
+      confPill.style.display = '';
+      confWrap.style.display = '';
+      const accVal = data.accuracy <= 1 ? data.accuracy * 100 : data.accuracy;
       const pct = Math.max(0, Math.min(100, accVal));
       confText.textContent = pct.toFixed(2)+'%';
       confBar.style.width = pct.toFixed(2)+'%';
     }
 
+    
     if(data.symptom_analysis){
       explanation.style.display='block';
       explanation.innerHTML = '<h3>Explanation</h3><p class="muted">'+escapeHtml(data.symptom_analysis).replace(/\n/g,'<br>')+'</p>';
@@ -298,8 +342,12 @@
   }
 
   analyzeBtn.addEventListener('click', (e)=>{ e.preventDefault(); analyze(); });
+  copyJson.addEventListener('click', async ()=>{
+    try{ await navigator.clipboard.writeText(jsonBox.textContent||'{}'); toast('JSON copied'); }
+    catch{ toast('Could not copy'); }
+  });
 
- 
+  
   updateAnalyzeState();
   symptom.addEventListener('input', updateAnalyzeState);
   </script>
