@@ -11,11 +11,12 @@ _DERM_MODEL = None
 def _load_derm_model():
     global _DERM_MODEL
     if _DERM_MODEL is None:
+        # Keras SavedModel from HF Hub
         _DERM_MODEL = from_pretrained_keras("google/derm-foundation")
     return _DERM_MODEL
 
 def _pil_to_tfexample_bytes(img: Image.Image) -> bytes:
-    """It returns a PIL Image in tf.train.Example serialized."""
+    """Kthen një PIL Image në tf.train.Example serialized (si në shembullin e HF)."""
     buf = BytesIO()
     img.convert("RGB").save(buf, "PNG")
     image_bytes = buf.getvalue()
