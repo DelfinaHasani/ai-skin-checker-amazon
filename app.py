@@ -3,8 +3,8 @@ from typing import Optional
 import logging
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
-from derm_embed import predict_skin_condition, derm_embedding
-from medgemma_infer import analyze_symptoms  
+from derm_foundation import predict_skin_condition, derm_embedding
+from tiny_llama  import analyze_symptoms  # pranon img: Optional[Image.Image]
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.logger.setLevel(logging.INFO)
@@ -12,6 +12,10 @@ app.logger.setLevel(logging.INFO)
 @app.route("/", methods=["GET"])
 def index():
     return render_template("detect.html")
+
+@app.get("/health")
+def health():
+    return {"ok": True}, 200
 
 @app.route("/detect", methods=["POST"])
 def detect():
@@ -34,9 +38,9 @@ def detect():
                 app.logger.exception("Could not read image")
                 return jsonify({"message": f"Could not read image: {e}"}), 400
 
-        # (1) Only photo
-        # (2) Only text
-        # (3) Both
+        # (1) Vetëm foto  → klasifikim + embedding
+        # (2) Vetëm tekst → analizë tekstuale (img=None)
+        # (3) Të dyja     → klasifikim + embedding + analizë
         label = None
         score = None
         embedding = None
@@ -49,8 +53,7 @@ def detect():
                 app.logger.exception("Image model error")
                 return jsonify({"message": f"Image model error: {e}"}), 500
 
-         
-        
+            # Nxjerr embedding nga Derm Foundation
             try:
                 embedding = derm_embedding(img).astype(float).tolist()
             except Exception as e:
@@ -71,4 +74,6 @@ def detect():
         return jsonify({"message": f"Unhandled server error: {e}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5050, debug=True)
+    app.run(host="127.0.0.1", port=5051, debug=True, use_reloader=False)
+
+
