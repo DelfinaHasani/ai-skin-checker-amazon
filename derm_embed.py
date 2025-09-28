@@ -1,34 +1,27 @@
-# derm_embed.py
-from huggingface_hub import from_pretrained_keras
-from PIL import Image
-from io import BytesIO
-import tensorflow as tf
-import numpy as np
-import os
+from __future__ import annotations
+from PIL import ImageStat, Image
 
-# <<< set your local image path here >>>
-IMAGE_PATH = r"C:\Users\GOLD mobile\Desktop\skin-check\test_gradient1.png"
+def predict_skin_condition(img: Image.Image) -> tuple[str, float]:
+    """
+    Simple heuristic for demo: if the red channel clearly dominates,
+    we label it as "erythema-like"; otherwise "benign-appearing".
+    Returns (label, confidence 0..1).
+"""
 
-# Load & bytes-encode the image as expected by the model
-img = Image.open(IMAGE_PATH).convert("RGB")
-buf = BytesIO()
-img.save(buf, "PNG")
-image_bytes = buf.getvalue()
 
-# Wrap as TF Example (the model expects tf.train.Example with 'image/encoded')
-example = tf.train.Example(
-    features=tf.train.Features(
-        feature={"image/encoded": tf.train.Feature(bytes_list=tf.train.BytesList(value=[image_bytes]))}
-    )
-).SerializeToString()
+    small = img.resize((128, 128))
+    stat = ImageStat.Stat(small)
+    r, g, b = [float(x) for x in stat.mean[:3]]
 
-# Load the Keras SavedModel directly from the Hub
-model = from_pretrained_keras("google/derm-foundation")  # gated repo; make sure you accepted terms
-infer = model.signatures["serving_default"]
+  
+    redness = max(0.0, r - (g + b) / 2.0)
+    conf = max(0.0, min(1.0, redness / 50.0))
 
-# Run inference to get the embedding
-output = infer(inputs=tf.constant([example]))
-embedding = output["embedding"].numpy().flatten()
+    if conf > 0.35:
+        label = "erythema-like pattern"
+        score = conf
+    else:
+        label = "benign-appearing pattern"
+        score = 1.0 - conf * 0.8
 
-print("Embedding shape:", embedding.shape)
-print("First 10 values:", np.array2string(embedding[:10], precision=4))
+    return label, float(score)
