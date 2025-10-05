@@ -3,134 +3,202 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Skin Check · Advanced UI</title>
+  <title>Skin Check</title>
   <style>
-    :root{
-      --bg:#0b0c10; --panel:#111218; --muted:#6a7180; --text:#e8ecf1; --brand:#6aa6ff; --accent:#4ade80; --danger:#ff6b6b; --border:#1f2430;
-      --radius:14px; --radius-sm:10px; --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, sans-serif; background:linear-gradient(180deg, #0b0c10, #0e1117); color:var(--text)}
-    .container{max-width:980px; margin-inline:auto; padding:28px 18px 80px}
+  :root{
+    --bg1:#1e2a38; --bg2:#28364a; 
+    --panel:#0f1420ee; --panel-2:#121a29; 
+    --text:#eef3ff; --muted:#a7b0c7;
+    --brand:#67b3ff; --brand-2:#a48bff;
+    --accent:#41e0a4; --danger:#ff6b6b;
+    --border:#243048;
 
-    header{display:flex; align-items:center; gap:14px; margin-bottom:22px}
-    header .logo{width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg, var(--brand), #8a7dff); display:grid; place-items:center; box-shadow:var(--shadow)}
-    header .logo span{font-weight:800}
-    header h1{margin:0; font-size:1.4rem; letter-spacing:.2px}
-    header .sub{color:var(--muted); font-size:.95rem}
+    --radius:16px; --radius-sm:12px;
+    --shadow:0 14px 40px rgba(0,0,0,.35);
+    --grad:linear-gradient(135deg,var(--brand),var(--brand-2));
+  }
 
-    .grid{display:grid; grid-template-columns: 1.1fr .9fr; gap:18px}
-    @media (max-width: 880px){ .grid{grid-template-columns:1fr;}}
+  *{box-sizing:border-box}
+  html,body{height:100%}
 
-    .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
-    .card h2{margin:0 0 8px; font-size:1.05rem}
-    .muted{color:var(--muted)}
 
-    .uploader{border:1.5px dashed #2b3240; border-radius:var(--radius); padding:18px; display:grid; place-items:center; text-align:center; transition:.2s border-color, .2s background}
-    .uploader.drag{border-color:var(--brand); background:#0d1220}
-    .uploader input{display:none}
-    .uploader .cta{display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, var(--brand), #8a7dff); border:none; color:white; padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:600}
-    .uploader .hint{font-size:.9rem; color:var(--muted); margin-top:8px}
+  body{
+    margin:0; color:var(--text);
+    background:
+      radial-gradient(1200px 800px at 15% -10%, #334667 0%, transparent 60%),
+      radial-gradient(1400px 900px at 120% 110%, #1a2742 0%, transparent 65%),
+      linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto, Arial, "Noto Sans", sans-serif;
+    min-height:100svh; overflow-x:hidden;
+  }
 
-    .preview{margin-top:14px; display:flex; align-items:flex-start; gap:14px}
-    .preview img{width:160px; height:160px; object-fit:cover; border-radius:12px; border:1px solid var(--border)}
-    .preview .meta{flex:1; min-width:0}
-    .kv{display:flex; gap:10px; flex-wrap:wrap; font-size:.9rem}
-    .kv .tag{background:#141823; border:1px solid var(--border); padding:6px 8px; border-radius:10px; color:#cfd6e4}
 
-    textarea{width:100%; min-height:120px; resize:vertical; background:#0d1016; color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px}
+  body::before{
+    content:"";
+    position:fixed; inset:-10% -10%;
+    pointer-events:none; z-index:0;
+    background:
+      radial-gradient(40% 35% at 20% 25%, rgba(103,179,255,.28), transparent 60%),
+      radial-gradient(45% 40% at 80% 20%, rgba(164,139,255,.25), transparent 60%),
+      radial-gradient(38% 32% at 55% 75%, rgba(65,224,164,.22), transparent 60%);
+    filter: blur(30px) saturate(1.1);
+    animation: floatAurora 20s ease-in-out infinite;
+    transform: translateZ(0);
+    mix-blend-mode: screen;
+  }
+  @keyframes floatAurora{
+    0%   { transform: translate(-1%, -1%) scale(1.00) }
+    50%  { transform: translate(1%, 1%)   scale(1.04) }
+    100% { transform: translate(-1%, -1%) scale(1.00) }
+  }
 
-    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
-    .btn{appearance:none; border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg, var(--brand), #8a7dff); color:white}
-    .btn.secondary{background:#141823; color:#cfd6e4; border:1px solid var(--border)}
-    .btn.ghost{background:transparent; border:1px dashed #2b3240; color:#cfd6e4}
-    .btn:disabled{opacity:.55; cursor:not-allowed}
 
-    .result{display:grid; gap:12px}
-    .pill{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:.9rem; border:1px solid var(--border); background:#10131a}
-    .confidence{height:12px; background:#121620; border:1px solid var(--border); border-radius:999px; overflow:hidden}
-    .confidence .bar{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #b2f59c)}
-    .json{background:#0c0f15; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#c7d2fe; font-size:.9rem; overflow:auto; max-height:260px}
+  body::after{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background: repeating-linear-gradient(60deg, rgba(255,255,255,.05) 0 2px, transparent 2px 18px);
+    opacity:.28; mix-blend-mode: overlay;
+    animation: drift 24s linear infinite;
+  }
+  @keyframes drift{ 0%{background-position:0 0} 100%{background-position:320px 220px} }
 
-    .toast{position:fixed; right:16px; bottom:16px; background:#10131a; border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(10px); transition:.25s}
-    .toast.show{opacity:1; transform:translateY(0)}
+  .wrap{position:relative; z-index:1; max-width:1120px; margin:auto; padding:28px 18px 90px}
+  header{display:flex; align-items:center; gap:14px; margin-bottom:16px}
+  .mark{width:46px; height:46px; border-radius:14px; background:var(--grad); display:grid; place-items:center;
+        box-shadow:var(--shadow); color:#0b0f18; font-weight:900}
+  header h1{margin:0; font-size:1.55rem}
+  header .sub{color:var(--muted)}
 
-    .spinner{width:22px; height:22px; border-radius:50%; border:3px solid #263044; border-top-color:#7aa2ff; animation:spin 1s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
+  .grid{display:grid; grid-template-columns: 1.05fr .95fr; gap:18px}
+  @media (max-width:980px){ .grid{grid-template-columns:1fr} }
 
-    .overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.45); z-index:50}
-    .overlay.show{display:grid}
-    .dialog{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)), var(--panel);
+    border:1px solid var(--border); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);
+    backdrop-filter: blur(6px)
+  }
+  .card h2{margin:0 0 12px; font-size:1.06rem}
+
+  .uploader{border:1.5px dashed #344563; border-radius:var(--radius); padding:18px; display:grid; place-items:center; text-align:center; transition:.25s}
+  .uploader.drag{border-color:#89b1ff; background:#0e1530}
+  .uploader input{display:none}
+  .cta{display:inline-flex; align-items:center; gap:8px; background:var(--grad); padding:10px 14px; border:none; color:#0b0f18; border-radius:14px; cursor:pointer; font-weight:800}
+  .hint{color:var(--muted); font-size:.92rem; margin-top:8px}
+
+  .preview{display:none; margin-top:14px; gap:14px; align-items:flex-start}
+  .preview img{width:168px; height:168px; object-fit:cover; border-radius:14px; border:1px solid var(--border)}
+  .kv{display:flex; gap:8px; flex-wrap:wrap}
+  .tag{background:#141c2d; border:1px solid var(--border); padding:6px 9px; border-radius:999px; color:#d6def2; font-size:.88rem}
+
+  .btn{appearance:none; border:none; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer}
+  .btn.primary{background:var(--grad); color:#0b0f18}
+  .btn.secondary{background:#121a2a; color:#d6def2; border:1px solid var(--border)}
+  .btn.ghost{background:transparent; border:1px dashed #344563; color:#cfd6ea}
+  .btn:disabled{opacity:.55; cursor:not-allowed}
+  .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+
+  textarea{width:100%; min-height:140px; resize:vertical; background:var(--panel-2); color:var(--text);
+           border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; line-height:1.6}
+
+ 
+  .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-size:.88rem;
+        border:1px solid var(--border); background:#101726}
+  .skeleton{height:8px; border-radius:10px; background:
+      linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.18), rgba(255,255,255,.08));
+      background-size:300% 100%; animation: shimmer 1.2s infinite}
+  @keyframes shimmer{0%{background-position:0 0} 100%{background-position:300% 0}}
+  .skeleton::before{content:""; display:block; height:100px; margin-bottom:10px}
+  .skeleton::after{content:""; display:block; height:16px; margin-top:10px}
+
+  .overlay{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.35); z-index:50}
+  .overlay.show{display:grid}
+  .dialog{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow)}
+  .spinner{width:22px; height:22px; border-radius:50%; border:3px solid #263044; border-top-color:#7aa2ff; animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .toast{position:fixed; right:16px; bottom:16px; background:#10131a; border:1px solid var(--border); color:var(--text);
+         padding:10px 12px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(10px); transition:.25s; z-index:60}
+  .toast.show{opacity:1; transform:translateY(0)}
+
+  /* Analyze button loading state */
+  .btn.loading{ position:relative; pointer-events:none; opacity:.88 }
+  .btn.loading::after{
+    content:""; width:16px; height:16px; border-radius:50%;
+    border:2px solid currentColor; border-top-color:transparent;
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    animation:spin 1s linear infinite;
+  }
   </style>
+
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <header>
-      <div class="logo"><span>🧪</span></div>
+      <div class="mark">🧪</div>
       <div>
         <h1>Skin Check</h1>
-        <div class="sub">Upload an image, optionally describe symptoms, and get a quick AI demo response.</div>
+        <div class="sub">Upload an image, add symptoms (optional), and get an AI explanation.</div>
       </div>
     </header>
 
     <div class="grid">
-      <!-- Left: Input -->
+      <!-- LEFT -->
       <section class="card">
-        <h2>1) Upload</h2>
+        <h2>Input</h2>
+
         <div id="drop" class="uploader" tabindex="0">
           <div>
             <p style="margin:6px 0 10px">Drag & drop an image here</p>
             <button class="cta" id="pickBtn" type="button">Choose File</button>
-            <div class="hint">PNG / JPG up to ~10 MB</div>
+            <div class="hint">PNG/JPG up to ~10 MB</div>
           </div>
           <input id="fileInput" name="file" type="file" accept="image/*" />
         </div>
-        <div id="preview" class="preview" style="display:none">
+
+        <div id="preview" class="preview">
           <img id="prevImg" alt="preview"/>
-          <div class="meta">
-            <div class="kv">
+          <div style="flex:1">
+            <div class="kv" style="margin-bottom:10px">
               <span class="tag" id="kvName">—</span>
               <span class="tag" id="kvSize">—</span>
               <span class="tag" id="kvDim">—</span>
             </div>
-            <div class="row" style="margin-top:10px">
+            <div class="row">
               <button class="btn secondary" id="replaceBtn" type="button">Replace</button>
               <button class="btn ghost" id="clearBtn" type="button">Clear</button>
             </div>
           </div>
         </div>
 
-        <h2 style="margin-top:18px">2) Symptoms (optional)</h2>
+        <div style="height:12px"></div>
+        <h2>Symptoms (optional)</h2>
         <textarea id="symptom" name="symptom" placeholder="e.g., redness, itchiness, sensitivity..."></textarea>
-
-        <div class="row" style="margin-top:14px">
-          <button id="analyzeBtn" class="btn primary" disabled>Analyze</button>
-          <button id="tryBtn" class="btn secondary" type="button">Try sample</button>
+        <div class="row" style="justify-content:space-between">
+          <div class="chars"><span id="charCount">0</span> / 600</div>
+          <div class="row">
+            <button id="tryBtn" class="btn secondary" type="button">Try sample</button>
+            <button id="analyzeBtn" class="btn primary" type="button" disabled>Analyze</button>
+          </div>
         </div>
       </section>
 
-      <!-- Right: Output -->
+      <!-- RIGHT -->
       <section class="card">
         <h2>Result</h2>
-        <div id="resultEmpty" class="muted">No analysis yet. Results will appear here.</div>
-        <div id="result" class="result" style="display:none">
-          <div class="row">
-            <div class="pill" id="modePill" title="Input mode">Mode: <strong id="mode">—</strong></div>
-            <div class="pill" id="diagPill">Diagnosis: <strong id="disease">—</strong></div>
-            <div class="pill" id="confPill">Confidence: <strong id="confText">—</strong></div>
+        <div id="meta" class="meta" style="display:none">
+          <span class="chip" id="chipMode">Mode: —</span>
+          <span class="chip" id="chipTime">—</span>
+        </div>
+
+        <div id="empty" class="muted">No analysis yet.</div>
+        <div id="loading" class="skeleton" style="display:none"></div>
+
+        <div id="explanationWrap" style="display:none">
+          <div id="explanation"></div>
+          <div class="disclaimer" style="margin-top:10px; color:var(--muted)">
+            This content is general, non-diagnostic information. If symptoms persist, worsen, or spread, seek a clinician’s evaluation.
           </div>
-          <div class="confidence" id="confWrap" title="confidence" style="display:none">
-            <div id="confBar" class="bar"></div>
-          </div>
-          <div id="explanation" style="display:none"></div>
-          <details>
-            <summary class="muted">Raw JSON</summary>
-            <pre id="json" class="json">{}</pre>
-          </details>
-          <div class="row">
-            <button class="btn ghost" id="copyJson" type="button">Copy JSON</button>
+          <div class="row" style="margin-top:10px">
             <button class="btn secondary" id="resetBtn" type="button">Reset</button>
           </div>
         </div>
@@ -139,217 +207,193 @@
   </div>
 
   <div id="overlay" class="overlay">
-    <div class="dialog">
-      <div class="spinner"></div>
-      <div>Processing…</div>
-    </div>
+    <div class="dialog"><div class="spinner"></div><div>Processing…</div></div>
   </div>
-
   <div id="toast" class="toast"></div>
 
   <script>
-  const $ = (id)=>document.getElementById(id);
-  const drop = $('drop');
-  const fileInput = $('fileInput');
-  const pickBtn = $('pickBtn');
-  const analyzeBtn = $('analyzeBtn');
-  const tryBtn = $('tryBtn');
-  const symptom = $('symptom');
-  const overlay = $('overlay');
+  (function(){
+    'use strict';
+    const $ = id => document.getElementById(id);
 
-  const result = $('result');
-  const resultEmpty = $('resultEmpty');
-  const modePill = $('modePill');
-  const modeText = $('mode');
-  const disease = $('disease');
-  const diagPill = $('diagPill');
-  const confPill = $('confPill');
-  const confText = $('confText');
-  const confWrap = $('confWrap');
-  const confBar = $('confBar');
-  const explanation = $('explanation');
-  const jsonBox = $('json');
-  const copyJson = $('copyJson');
-  const resetBtn = $('resetBtn');
-
-  const previewWrap = $('preview');
-  const prevImg = $('prevImg');
-  const kvName = $('kvName');
-  const kvSize = $('kvSize');
-  const kvDim = $('kvDim');
-  const replaceBtn = $('replaceBtn');
-  const clearBtn = $('clearBtn');
-
-  function toast(msg){
-    const t = $('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'), 2200);
-  }
-
-  function bytes(n){
-    const units=['B','KB','MB','GB'];
-    let u=0; let v=n;
-    while(v>1024 && u<units.length-1){ v/=1024; u++; }
-    return v.toFixed( (u===0)?0:1 )+" "+units[u];
-  }
+ 
+    const drop = $('drop'), fileInput = $('fileInput'), pickBtn = $('pickBtn');
+    const preview = $('preview'), prevImg = $('prevImg'), kvName = $('kvName'), kvSize = $('kvSize'), kvDim = $('kvDim');
+    const replaceBtn = $('replaceBtn'), clearBtn = $('clearBtn');
+    const symptom = $('symptom'), charCount = $('charCount');
+    const tryBtn = $('tryBtn'), analyzeBtn = $('analyzeBtn'), resetBtn = $('resetBtn');
+    const overlay = $('overlay'), toastBox = $('toast');
+    const empty = $('empty'), loading = $('loading'), explanationWrap = $('explanationWrap'), explanation = $('explanation');
+    const meta = $('meta'), chipMode = $('chipMode'), chipTime = $('chipTime');
 
   
-  function updateAnalyzeState(){
-    const hasFile = !!fileInput.files[0];
-    const hasTxt  = (symptom.value || "").trim().length > 0;
-    analyzeBtn.disabled = !(hasFile || hasTxt);
-  }
-
-  function showPreview(file){
-    const url = URL.createObjectURL(file);
-    prevImg.onload = ()=>{ URL.revokeObjectURL(url); kvDim.textContent = prevImg.naturalWidth+"×"+prevImg.naturalHeight; };
-    prevImg.src = url;
-    kvName.textContent = file.name;
-    kvSize.textContent = bytes(file.size);
-    previewWrap.style.display='flex';
-    updateAnalyzeState();
-  }
-
-  function clearFile(){
-    fileInput.value = '';
-    previewWrap.style.display='none';
-    updateAnalyzeState();
-  }
-
-  function resetAll(){
-    clearFile();
-    symptom.value = '';
-    result.style.display='none';
-    resultEmpty.style.display='block';
-    diagPill.style.display='';
-    confPill.style.display='';
-    confWrap.style.display='none';
-    disease.textContent = '—';
-    confText.textContent = '—';
-    confBar.style.width = '0%';
-    explanation.style.display='none';
-    explanation.innerHTML='';
-    jsonBox.textContent='{}';
-    modeText.textContent='—';
-    updateAnalyzeState();
-  }
-
-  pickBtn.addEventListener('click', ()=> fileInput.click());
-  replaceBtn.addEventListener('click', ()=> fileInput.click());
-  clearBtn.addEventListener('click', clearFile);
-  resetBtn.addEventListener('click', resetAll);
-
-  fileInput.addEventListener('change', (e)=>{
-    const f = e.target.files[0];
-    if(!f) { updateAnalyzeState(); return; }
-    if(!/^image\//.test(f.type)) { toast('Please select an image file.'); fileInput.value=''; updateAnalyzeState(); return; }
-    if(f.size > 10*1024*1024) { toast('File too large (>10MB).'); fileInput.value=''; updateAnalyzeState(); return; }
-    showPreview(f);
-  });
-
-  // Drag & drop
-  ['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt, e=>{e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');}));
-  ;['dragleave','drop'].forEach(evt=>drop.addEventListener(evt, e=>{e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');}));
-  drop.addEventListener('drop', (e)=>{
-    const f = e.dataTransfer.files[0];
-    if(!f) return;
-    fileInput.files = e.dataTransfer.files;
-    fileInput.dispatchEvent(new Event('change'));
-  });
-
-  tryBtn.addEventListener('click', ()=>{
-    symptom.value = 'redness and mild itch for 2 days';
-    updateAnalyzeState();
-    toast('Sample symptom inserted. You can analyze with or without a photo.');
-  });
-
-  async function analyze(){
-    const f = fileInput.files[0];
-    const hasTxt = (symptom.value || "").trim().length > 0;
-
-    if(!f && !hasTxt){
-      toast('Please add a photo or write symptoms.');
-      return;
+    function toast(msg){ toastBox.textContent = msg; toastBox.classList.add('show'); setTimeout(()=>toastBox.classList.remove('show'), 2200); }
+    function bytes(n){ const u=['B','KB','MB','GB']; let i=0,v=n; while(v>1024&&i<u.length-1){v/=1024;i++} return (i?v.toFixed(1):v|0)+' '+u[i]; }
+    function updateAnalyzeState(){
+      const hasFile = !!(fileInput.files && fileInput.files[0]);
+      const hasTxt = (symptom.value || '').trim().length > 0;
+      analyzeBtn.disabled = !(hasFile || hasTxt) || analyzeBtn.classList.contains('loading');
     }
-
-    const fd = new FormData();
-    if(f) fd.append('file', f);
-    fd.append('symptom', symptom.value||'');
-
-    overlay.classList.add('show');
-    try{
-      const res = await fetch('/detect', {method:'POST', body: fd});
-      const text = await res.text();
-      if(!res.ok){
-        let msg = text;
-        try{ msg = JSON.parse(text).message || msg; }catch{}
-        throw new Error(msg||('HTTP '+res.status));
+    function setProcessing(on){
+      if(on){
+        analyzeBtn.dataset.prevLabel = analyzeBtn.textContent || 'Analyze';
+        analyzeBtn.textContent = 'Processing…';
+        analyzeBtn.classList.add('loading');
+        analyzeBtn.disabled = true;
+        overlay.classList.add('show');
+      }else{
+        analyzeBtn.textContent = analyzeBtn.dataset.prevLabel || 'Analyze';
+        analyzeBtn.classList.remove('loading');
+        overlay.classList.remove('show');
+        updateAnalyzeState();
       }
-      const data = JSON.parse(text);
-      renderResult(data, !!f, hasTxt);
-    }catch(err){
-      toast('Error: '+err.message);
-    }finally{
-      overlay.classList.remove('show');
     }
-  }
 
-  function renderResult(data, hadFile, hadText){
-    resultEmpty.style.display='none';
-    result.style.display='grid';
+    // Image preview
+    pickBtn.addEventListener('click', ()=> fileInput.click());
+    replaceBtn.addEventListener('click', ()=> fileInput.click());
+    clearBtn.addEventListener('click', ()=> { fileInput.value=''; preview.style.display='none'; updateAnalyzeState(); });
+
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files[0];
+      if(!f){ updateAnalyzeState(); return; }
+      if(!/^image\//.test(f.type)){ toast('Please select an image file.'); fileInput.value=''; updateAnalyzeState(); return; }
+      if(f.size > 10*1024*1024){ toast('File too large (>10MB)'); fileInput.value=''; updateAnalyzeState(); return; }
+      const url = URL.createObjectURL(f);
+      prevImg.onload = ()=>{ URL.revokeObjectURL(url); kvDim.textContent = `${prevImg.naturalWidth}×${prevImg.naturalHeight}`; };
+      prevImg.src = url;
+      kvName.textContent = f.name;
+      kvSize.textContent = bytes(f.size);
+      preview.style.display='grid';
+      updateAnalyzeState();
+    });
+
+    // Drag & drop
+    ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.add('drag');}));
+    ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.remove('drag');}));
+    drop.addEventListener('drop', e=>{
+      const f = e.dataTransfer.files[0]; if(!f) return;
+      fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change'));
+    });
+
+    // Symptom box
+    const MAX_LEN = 600;
+    symptom.addEventListener('input', ()=>{
+      const val = symptom.value;
+      if(val.length > MAX_LEN){ symptom.value = val.slice(0, MAX_LEN); }
+      charCount.textContent = symptom.value.length;
+      updateAnalyzeState();
+    });
+    charCount.textContent = 0;
+
+    tryBtn.addEventListener('click', ()=>{
+      symptom.value = 'red, scaly plaques on elbows for weeks; intermittent itch; gets worse after cold weather';
+      charCount.textContent = symptom.value.length;
+      updateAnalyzeState();
+      toast('Sample text inserted.');
+    });
+
+    // Text cleanup
+    function cleanupModelText(s){
+      let t = String(s || '');
+      t = t.replace(/\bimage[- ]based\s+description\s*(?:\(\s*non[- ]diagnostic\s*\))?\s*:\s*/gi,'')
+           .replace(/\bderm[- ]?focused\s+visual\s+description\s*:\s*/gi,'');
+      t = t.split(/\r?\n/).filter(line => !/^\s*(no|none|null|n\/a)\s*$/i.test(line)).join(' ');
+      t = t.replace(/\s{2,}/g,' ').trim();
+      return t;
+    }
+    function finishSentence(s){
+      let t = (s||'').trim(); if(!t) return t;
+      if(/[.!?…]\s*$/.test(t)) return t;
+      if(/(?:\b(?:and|or|with|including|such as|like)|[,;:])\s*$/.test(t)){
+        t += ' Consider gentle skincare and sun protection, and consult a clinician if symptoms persist or worsen.';
+      } else t += '.';
+      return t;
+    }
+    function inferDiagnosisFromText(txt){
+      const t = String(txt||'').toLowerCase();
+      if(/\bpsoriasis\b/.test(t)) return 'psoriasis-like pattern';
+      if(/\beczema|dermatitis\b/.test(t)) return 'eczema-like pattern';
+      if(/\bacne|pimple|comedone\b/.test(t)) return 'acne-like pattern';
+      if(/\bfungal|tinea|ringworm\b/.test(t)) return 'tinea-like pattern';
+      if(/\bhives|urticaria\b/.test(t)) return 'urticaria-like pattern';
+      if(/\berythema|red(?:ness)?\b/.test(t)) return 'erythema-like pattern';
+      return null;
+    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+    // Analyze
+    analyzeBtn.addEventListener('click', async ()=>{
+      const f = fileInput.files[0];
+      const hasTxt = (symptom.value || '').trim().length > 0;
+      if(!f && !hasTxt){ toast('Please add a photo or write symptoms.'); return; }
+
+      const fd = new FormData();
+      if(f) fd.append('file', f);
+      fd.append('symptom', symptom.value || '');
+      fd.append('length', 'long');
+
+      const t0 = performance.now();
+      empty.style.display='none';
+      explanationWrap.style.display='none';
+      meta.style.display='none';
+      loading.style.display='block';
+      setProcessing(true);
+
+      try{
+        const res = await fetch('/detect', { method:'POST', body:fd });
+        const raw = await res.text();
+        if(!res.ok){
+          let msg = raw; try{ msg = JSON.parse(raw).message || msg }catch{}
+          throw new Error(msg);
+        }
+        const data = JSON.parse(raw);
+
+        const hadFile = !!f;
+        let body = cleanupModelText(data.symptom_analysis || '');
+        body = finishSentence(body);
+
+        const dx = (data.disease && String(data.disease).trim()) || inferDiagnosisFromText(body);
+        const parts = [];
+        if(hadFile && dx){
+          parts.push(`From the picture you uploaded, it seems like <strong>${escapeHtml(dx)}</strong>.`);
+        }
+        if(hasTxt){
+          const u = (symptom.value || '').trim();
+          if(u) parts.push(`Based on your notes (“${escapeHtml(u)}”), here is a combined, non-diagnostic explanation:`);
+        }
+        if(body) parts.push(escapeHtml(body));
+        if(parts.length===0) parts.push('No explanation was generated.');
+
+        explanation.innerHTML = '<p>'+ parts.join(' ') +'</p>';
+
+        chipMode.textContent = 'Mode: ' + (hadFile && hasTxt ? 'Image + Text' : hadFile ? 'Image only' : 'Text only');
+        const ms = Math.max(1, Math.round(performance.now() - t0));
+        chipTime.textContent = `Processed in ${(ms/1000).toFixed(2)}s`;
+        meta.style.display='flex';
+
+        loading.style.display='none';
+        explanationWrap.style.display='block';
+      } catch (err){
+        loading.style.display='none';
+        empty.style.display='block';
+        toast('Error: ' + err.message);
+      } finally{
+        setProcessing(false);
+      }
+    });
+
+    resetBtn.addEventListener('click', ()=>{
+      fileInput.value=''; preview.style.display='none';
+      symptom.value=''; charCount.textContent='0';
+      empty.style.display='block'; loading.style.display='none';
+      explanationWrap.style.display='none'; meta.style.display='none';
+      updateAnalyzeState();
+    });
 
     
-    modeText.textContent = hadFile && hadText ? 'Image + Text' : hadFile ? 'Image only' : 'Text only';
-
-    
-    const hasDisease = data.disease != null && data.disease !== '';
-    const hasAccNum = typeof data.accuracy === 'number';
-
-    if(!hasDisease){
-      diagPill.style.display = 'none';
-    } else {
-      diagPill.style.display = '';
-      disease.textContent = data.disease;
-    }
-
-    if(!hasAccNum){
-      confPill.style.display = 'none';
-      confWrap.style.display = 'none';
-    } else {
-      confPill.style.display = '';
-      confWrap.style.display = '';
-      const accVal = data.accuracy <= 1 ? data.accuracy * 100 : data.accuracy;
-      const pct = Math.max(0, Math.min(100, accVal));
-      confText.textContent = pct.toFixed(2)+'%';
-      confBar.style.width = pct.toFixed(2)+'%';
-    }
-
-    
-    if(data.symptom_analysis){
-      explanation.style.display='block';
-      explanation.innerHTML = '<h3>Explanation</h3><p class="muted">'+escapeHtml(data.symptom_analysis).replace(/\n/g,'<br>')+'</p>';
-    }else{
-      explanation.style.display='none';
-      explanation.innerHTML='';
-    }
-
-    jsonBox.textContent = JSON.stringify(data, null, 2);
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
-  }
-
-  analyzeBtn.addEventListener('click', (e)=>{ e.preventDefault(); analyze(); });
-  copyJson.addEventListener('click', async ()=>{
-    try{ await navigator.clipboard.writeText(jsonBox.textContent||'{}'); toast('JSON copied'); }
-    catch{ toast('Could not copy'); }
-  });
-
-  
-  updateAnalyzeState();
-  symptom.addEventListener('input', updateAnalyzeState);
+    updateAnalyzeState();
+  })();
   </script>
 </body>
 </html>
