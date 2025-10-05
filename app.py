@@ -1,34 +1,48 @@
 from __future__ import annotations
 from typing import Optional
-import logging
+import logging, re
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
-from derm_foundation import predict_skin_condition, derm_embedding
-from tiny_llama  import analyze_symptoms  # pranon img: Optional[Image.Image]
+from image import caption_image
+
+try:
+    from text import analyze_symptoms
+except Exception:
+    analyze_symptoms = None
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.logger.setLevel(logging.INFO)
 
+def _clean_clause(s:str)->str:
+    if not s: return ""
+    s=s.strip()
+    s=re.sub(r"(?i)\b(image|non-diagnostic|derm[- ]?focused).*?:\s*","",s).strip() 
+    s=re.sub(r"[ \t]*([.;,])+$","",s).strip()
+    if s and not s[0].isupper(): s=s[0].upper()+s[1:]
+    if s and s[-1] not in ".!?": s+="."
+    return s
+
+def _combine_paragraph(photo_txt:Optional[str], symptom_txt:Optional[str])->Optional[str]:
+    p=_clean_clause(photo_txt) if photo_txt else ""
+    t=_clean_clause(symptom_txt) if symptom_txt else ""
+    if p and t: return f"{p} {t}" 
+    return p or t or None
+
 @app.route("/", methods=["GET"])
-def index():
-    return render_template("detect.html")
+def index(): return render_template("detect.html")
 
 @app.get("/health")
-def health():
-    return {"ok": True}, 200
+def health(): return {"ok": True}, 200
 
 @app.route("/detect", methods=["POST"])
 def detect():
     try:
-        app.logger.info("HIT /detect")
         file = request.files.get("file")
         symptom_text = (request.form.get("symptom") or "").strip()
-
-        has_file = file is not None and file.filename != ""
-        has_text = len(symptom_text) > 0
-
+        has_file = bool(file and file.filename)
+        has_text = bool(symptom_text)
         if not has_file and not has_text:
-            return jsonify({"message": "Provide an image or write symptoms."}), 400
+            return jsonify({"message":"Provide an image or write symptoms."}), 400
 
         img: Optional[Image.Image] = None
         if has_file:
@@ -38,42 +52,35 @@ def detect():
                 app.logger.exception("Could not read image")
                 return jsonify({"message": f"Could not read image: {e}"}), 400
 
-        # (1) Vetëm foto  → klasifikim + embedding
-        # (2) Vetëm tekst → analizë tekstuale (img=None)
-        # (3) Të dyja     → klasifikim + embedding + analizë
-        label = None
-        score = None
-        embedding = None
-
+        photo_sentence = None
         if img is not None:
             try:
-                label, score = predict_skin_condition(img)
-                score = float(score)
+                photo_sentence = caption_image(img)
             except Exception as e:
-                app.logger.exception("Image model error")
-                return jsonify({"message": f"Image model error: {e}"}), 500
+                app.logger.exception("Caption model failed")
+                photo_sentence = None
 
-            # Nxjerr embedding nga Derm Foundation
-            try:
-                embedding = derm_embedding(img).astype(float).tolist()
-            except Exception as e:
-                app.logger.warning("Derm embedding failed: %s", e)
-                embedding = None
+        text_sentence = None
+        if has_text:
+            if analyze_symptoms:
+                try:
+                    text_sentence = analyze_symptoms(img, symptom_text) or ""
+                except Exception as e:
+                    app.logger.exception("Text analysis failed")
+                    text_sentence = f"User-reported symptoms: {symptom_text}"
+            else:
+                text_sentence = f"User-reported symptoms: {symptom_text}"
 
-        explanation = analyze_symptoms(img, symptom_text) if has_text else None
+        explanation = _combine_paragraph(photo_sentence, text_sentence)
 
         return jsonify({
-            "disease": label,          # None kur s’ka foto
-            "accuracy": score,         # None kur s’ka foto
-            "embedding": embedding,    # list[float] ose None (mund të jetë e gjatë)
-            "symptom_analysis": explanation  # None kur s’ka tekst
+            "disease": None,
+            "accuracy": None,
+            "symptom_analysis": explanation
         }), 200
-
     except Exception as e:
         app.logger.exception("Unhandled server error")
         return jsonify({"message": f"Unhandled server error: {e}"}), 500
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5051, debug=True, use_reloader=False)
-
-
