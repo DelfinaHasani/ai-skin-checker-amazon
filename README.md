@@ -11,11 +11,11 @@ POST /detect accepts multipart/form-data with optional file and symptom.
 Drag-and-drop upload, live preview, character count, disabled states, overlay “Processing…” indicator, toast notifications, and skeleton loading.
 
 ## Architecture
-Backend: Python Flask
-Route GET / → serves UI.
-Route POST /detect → accepts multipart/form-data and returns JSON.
-Optional image embedding via Salesforce/blip-vqa-base (Keras SavedModel on HF).
-HEIC/HEIF support via pillow-heif.
-Frontend: Single page (detect.html)
-All styles are in-page.
+#### Backend: Python Flask                                                                               
+Route GET / → serves UI.                                                             
+Route POST /detect → accepts multipart/form-data and returns JSON.                                          
+Optional image embedding via Salesforce/blip-vqa-base (Keras SavedModel on HF).                                   
+HEIC/HEIF support via pillow-heif.                                                      
+#### Frontend: Single page (detect.html)                                                      
+All styles are in-page.                                                                 
 One JS file (static/detect.js) to avoid event conflicts.
