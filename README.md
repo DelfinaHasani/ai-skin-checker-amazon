@@ -1,8 +1,8 @@
-# ai-skin-checker-amazon
+# AI-driven skin symptoms checker
 ## Key Features
 ### Three input modes
-Image only → fast heuristic signal (+ optional embedding).
-Text only → lightweight, local text model (optional).
+Image only → fast heuristic signal (+ optional embedding).                                                                
+Text only → lightweight, local text model (optional).                                                          
 Image + Text → combined, user-friendly explanation.
 
 Clean API: POST /detect accepts multipart/form-data with optional file and symptom.
