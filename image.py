@@ -73,7 +73,7 @@ def _cap_pipe():
     return _cap1
 
 def caption_image(img:Image.Image)->Optional[str]:
-    """Kthen një fjali derm-focused pa prefikse; ose None nëse s’ka diçka të dobishme."""
+    """Returns a derm-focused sentence without prefixes; or None if there is nothing useful."""
     roi=_crop_lesion(img)
 
 
