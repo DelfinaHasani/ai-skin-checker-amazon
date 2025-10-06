@@ -1,4 +1,4 @@
-# AI-driven skin symptoms checker
+# AI-driven Skin Symptoms Checker
 ## Key Features
 #### Three input modes
 Image only → fast heuristic signal (+ optional embedding).                                                                
