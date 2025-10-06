@@ -19,3 +19,6 @@ HEIC/HEIF support via pillow-heif.
 #### Frontend: Single page (detect.html)                                                      
 All styles are in-page.                                                                 
 One JS file (static/detect.js) to avoid event conflicts.
+
+![capture9](https://github.com/user-attachments/assets/5a5e2d3c-58c9-4b03-a754-357d46f5cc5b)
+
